@@ -6,18 +6,53 @@ THREE.Triangle.prototype.measured_height = 0;
 // The geometric centre of the triangle
 THREE.Triangle.prototype.d = undefined;
 
-// geometry
-let geometry = new THREE.Geometry();
+// Initialise the webgl stuff
+const renderer = new THREE.WebGLRenderer();
+const material = new THREE.LineBasicMaterial( {color : 0x00ffff});
+document.getElementById("grid").appendChild(renderer.domElement);
 
-let points, triangles;
+let camera = undefined, three_points = undefined;
+const scene = new THREE.Scene();
+
+let geometry = new THREE.BufferGeometry(); //SphereBufferGeometry( 100, 100, 100 );
+let wireframe = new THREE.WireframeGeometry();
+
+const line = new THREE.LineSegments( wireframe );
+line.material.depthTest = false;
+line.material.opacity = 0.25;
+line.material.transparent = true;
+
+let points = [], triangles = [];
+
+function triangulate() {
+  const width = document.getElementById("width").value;
+  const height = document.getElementById("height").value;
+
+  initBaseData(width, height);
+
+  camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 1000 );
+  //camera = new THREE.OrthographicCamera(0 - (width / 10), width + (width / 10), 0 - (height / 10), height + (height / 10), 0, 2000);
+  renderer.setSize (window.innerWidth * 0.9, window.innerWidth * 0.9 * height / width);
+
+  camera.position.set(width/2, height/2, 500);
+  camera.lookAt(width/2, height/2, 0);
+
+//  three_points = new THREE.Line(geometry, material);
+//  scene.add(three_points)
+
+  scene.add(line);
+
+  renderer.render(scene, camera);
+
+  document.getElementById("triangulate-button").disabled = true;
+}
+
 
 // Create an array of points given the dimensions of the spherometer and the plate,
 // and use this to create the array of triangles.
 // Each point will start with a z coordinate of 0
-function initBaseData () {
+function initBaseData (width, height) {
   const radius = document.getElementById("radius").value;
-  const width = document.getElementById("width").value;
-  const height = document.getElementById("height").value;
 
   // side length of equilateral triangle given its circumradius
   const side = 3 * radius / Math.sqrt(3);
@@ -53,10 +88,12 @@ function initBaseData () {
     })).flat();
 
   // Build geometry
-  if (geometry != undefined) {
-    geometry.dispose();
-  }
-  geometry = new THREE.BufferGeometry().setFromPoints(points.flat);
+//  if (geometry != undefined) {
+//    geometry.dispose();
+//  }
+  geometry.setFromPoints(points.flat());
+  wireframe.dispose();
+  wireframe = new THREE.WireframeGeometry(geometry);
 }
 
 
@@ -88,11 +125,10 @@ function calcError() {
       t.c.corrections.push(error.z);
     }
   });
-}
 
-return [cumulativeError.reduce((a,b) => a + b, 0) / cumulativeError.length,
-  cumulativeError.reduce((a,b) => Math.max(Math.abs(a), Math.abs(b), 0)),
-  cumulativeError.reduce((a,b) => Math.min(Math.abs(a), Math.abs(b), Infinity))]
+  return [cumulativeError.reduce((a,b) => a + b, 0) / cumulativeError.length,
+          cumulativeError.reduce((a,b) => Math.max(Math.abs(a), Math.abs(b), 0)),
+          cumulativeError.reduce((a,b) => Math.min(Math.abs(a), Math.abs(b), Infinity))];
 }
 
 function correct(factor) {
