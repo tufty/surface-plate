@@ -106,13 +106,12 @@ function triangulate() {
   const radius = document.getElementById("radius").value;
   const width = document.getElementById("width").value;
   const height = document.getElementById("height").value;
-  let material = new THREE.MeshBasicMaterial();
 
   // Resize the renderer
   renderer.setSize (window.innerWidth * 0.9, window.innerWidth * 0.9 * height / width);
-  camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 1000 );
+  camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 600 );
 //  camera = new THREE.OrthographicCamera(0 - (width / 10), width + (width / 10), 0 - (height / 10), height + (height / 10), 0, 2000);
-  camera.position.set(width/2, height/2, 500);
+  camera.position.set(width/2, height/2, 300);
   camera.lookAt(width/2, height/2, 0);
 
   // Decompose the surface into points and triangles
@@ -122,13 +121,15 @@ function triangulate() {
   geometry.setIndex(Array.from(triangles, t => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)]).flat());
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(Array.from(points, p => [p.x, p.y, p.z]).flat(), 3));
 
-  const wireframe = new THREE.WireframeGeometry(geometry);
-  const line = new THREE.LineSegments(wireframe);
-  line.material.depthTest = false;
-  line.material.opacity = 0.25;
-  line.material.transparent = true;
+  geometry.addGroup(3, (triangles.length * 3) - 3, 0);
+  geometry.addGroup(0, 3, 1);
 
-  scene.add( line );
+  materials = [ new THREE.MeshBasicMaterial( {'color': 0xffffff, 'transparent': false, 'opacity': 0.25, 'wireframe': true}),
+                new THREE.MeshBasicMaterial( {'color': 0xff0000, 'transparent': false, 'wireframe': true})];
+
+  const mesh = new THREE.Mesh(geometry, materials);
+
+  scene.add( mesh );
 
   renderer.render(scene, camera);
 
