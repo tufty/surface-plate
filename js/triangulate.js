@@ -57,14 +57,14 @@ function decompose (radius, width, height) {
                                 points[row][col + 3],
                                 points[row + 3][col + 2]);
         t.d = points[row + 1][col + 2];
-        t.measured_height = 0;
+        t.measured_height = undefined;
         return t;
       } else {
         t = new THREE.Triangle( points[row][col],
                                 points[row][col + 3],
                                 points[row + 3][col + 1]);
         t.d = points[row + 1][col + 1];
-        t.measured_height = 0;
+        t.measured_height = undefined;
         return t;
       }
     });
@@ -78,14 +78,14 @@ function decompose (radius, width, height) {
                                  points[row][col + 3],
                                  points[row][col]);
         t.d = points[row - 1][col + 2];
-        t.measured_height = 0;
+        t.measured_height = undefined;
         return t;
       } else {
         t = new THREE.Triangle ( points[row - 3][col + 1],
                                  points[row][col + 3],
                                  points[row][col]);
         t.d = points[row - 1][col + 1];
-        t.measured_height = 0;
+        t.measured_height = undefined;
         return t;
       }
     });
@@ -186,7 +186,7 @@ function calcError() {
     t.getNormal(normal);
 
     // Take our normal and multiply to get "actual" position
-    normal.multiplyScalar(t.measured_height);
+    normal.multiplyScalar(t.measured_height || 0);
     normal.add(midpoint);
     // Subtract our current calculated position to get the error
     error.subVectors(t.d, normal);
@@ -203,19 +203,25 @@ function calcError() {
     }
   });
 
-  return [cumulativeError.reduce((a,b) => a + b, 0) / cumulativeError.length,
-          cumulativeError.reduce((a,b) => Math.max(Math.abs(a), Math.abs(b), 0)),
-          cumulativeError.reduce((a,b) => Math.min(Math.abs(a), Math.abs(b), Infinity))];
+  if (cumulativeError.length == 0) {
+    return [0,0,Infinity];
+  } else {
+    return [cumulativeError.reduce((a,b) => a + b, 0) / cumulativeError.length,
+            cumulativeError.reduce((a,b) => Math.max(Math.abs(a), Math.abs(b)), 0),
+            cumulativeError.reduce((a,b) => Math.min(Math.abs(a), Math.abs(b)), Infinity)];
+  }
 }
 
 function correct(factor) {
-  // Apply the overall correction
-  points.forEach( function (a) {
-    a.forEach( function (p) {
-      p.z = p.corrections.reduce((a,b)=>a+b, p.z) * factor;
-      p.corrections = [];
-    })
+  // Apply the overall correction and calculate average
+  points.forEach( function (p) {
+    p.z += p.corrections.reduce((a,b) => a + b, 0) * factor;
+    p.corrections = [];
   });
+  let avg = points.reduce((a, b) => a + b.z, 0) / points.length;
+
+  // move everything down by the average height
+  points.forEach (function(p){ p.z -= avg;});
 }
 
 function doit () {
