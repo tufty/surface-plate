@@ -30,66 +30,73 @@ function decompose (radius, width, height) {
   const h_step = radius / Math.sqrt(3);
   const v_step = radius / 2;
   const rows = Math.trunc(height / v_step) + 1;
-  const cols_max = Math.trunc(width / h_step) + 1;
+  const cols_even = Math.trunc(width / h_step) + 1;
+  const odd_offset = h_step / 2;
+  const cols_odd = Math.trunc((width - odd_offset) / h_step) + 1;
 
   // Sanity check.
-  if ((rows < 3) || (cols_max < 3)) {
+  if ((rows < 3) || (cols_even < 3) || (cols_odd < 3)) {
     return [];  // Be better here
   }
 
-  points = Array.from(iota(rows), function (row) {
-    let cols = (row % 2) ? cols_max - 1 : cols_max;
-    let offset = (row % 2) ? h_step / 2 : 0;
-    return Array.from(iota(cols), function (col) {
-      let p = new THREE.Vector3 (offset + (col * h_step), row * v_step, 0);
-      p.corrections = [];
-      return p;
-    });
+  points = Array.from (iota (rows), function (row) {
+    if (row % 2) {
+      return Array.from (iota (cols_odd), (col) => new THREE.Vector3(odd_offset + (col * h_step), (row * v_step), 0));
+    } else {
+      return Array.from (iota (cols_even), (col) => new THREE.Vector3((col * h_step), (row * v_step), 0));
+    }
   });
 
-  triangles = Array.from(iota(rows - 3), function(row) {
-    // First we do the downside up triangles, which are easy
-    let cols = (row % 2) ? cols_max - 1 : cols_max;
-    return Array.from(iota(cols - 3), function(col) {
-      let t;
-      if (row % 2) {
+  triangles = Array.from(iota (rows - 3), function (row){
+    let t;
+    if (row % 2) {
+      return Array.from (iota (cols_odd - 3), function(col) {
         t = new THREE.Triangle( points[row][col],
                                 points[row][col + 3],
                                 points[row + 3][col + 2]);
         t.d = points[row + 1][col + 2];
         t.measured_height = 0;
         return t;
-      } else {
+    });
+    } else {
+      return Array.from (iota (cols_even - 3), function(col) {
         t = new THREE.Triangle( points[row][col],
                                 points[row][col + 3],
                                 points[row + 3][col + 1]);
         t.d = points[row + 1][col + 1];
         t.measured_height = 0;
         return t;
-      }
-    });
+      });
+    }
   }).concat( Array.from(iota(3, rows), function(row) {
-    // And now the right way up triangles, which are a bit harder
-    let cols = (row % 2) ? cols_max - 1 : cols_max;
-    return Array.from(iota(cols - 3), function(col) {
-      let t;
-      if (row % 2) {
+    let t;
+    if (row % 2) {
+      return Array.from(iota(cols_odd - 3), function(col) {
         t = new THREE.Triangle ( points[row - 3][col + 2],
                                  points[row][col + 3],
                                  points[row][col]);
         t.d = points[row - 1][col + 2];
         t.measured_height = 0;
         return t;
-      } else {
+      });
+    } else {
+      return Array.from(iota(cols_even - 3), function(col) {
         t = new THREE.Triangle ( points[row - 3][col + 1],
                                  points[row][col + 3],
                                  points[row][col]);
         t.d = points[row - 1][col + 1];
         t.measured_height = 0;
         return t;
-      }
-    });
+      });
+    }
   })).flat();
+
+  // Little triangles for 3d render
+  // little_triangles = Array.from(iota(1, rows), function (row) {
+  //   let cols = (row % 2) ? cols_max - 1 : cols_max;
+  //   return Array.from(iota(0, cols - 1), function (col) {
+  //   });
+  // }).flat();
 
   // Flatten the array of points
   points = points.flat();
@@ -149,7 +156,7 @@ function update_selected() {
   geometry_2d.computeBoundingBox();
 
   let f = document.getElementById('measurement');
-  f.value = triangles[selected].measured_height;
+  f.value = triangles[selected].measured_height || 0;
   f.select();
 }
 
