@@ -57,14 +57,14 @@ function decompose (radius, width, height) {
                                 points[row][col + 3],
                                 points[row + 3][col + 2]);
         t.d = points[row + 1][col + 2];
-        t.measured_height = undefined;
+        t.measured_height = 0;
         return t;
       } else {
         t = new THREE.Triangle( points[row][col],
                                 points[row][col + 3],
                                 points[row + 3][col + 1]);
         t.d = points[row + 1][col + 1];
-        t.measured_height = undefined;
+        t.measured_height = 0;
         return t;
       }
     });
@@ -78,14 +78,14 @@ function decompose (radius, width, height) {
                                  points[row][col + 3],
                                  points[row][col]);
         t.d = points[row - 1][col + 2];
-        t.measured_height = undefined;
+        t.measured_height = 0;
         return t;
       } else {
         t = new THREE.Triangle ( points[row - 3][col + 1],
                                  points[row][col + 3],
                                  points[row][col]);
         t.d = points[row - 1][col + 1];
-        t.measured_height = undefined;
+        t.measured_height = 0;
         return t;
       }
     });
@@ -109,10 +109,10 @@ function triangulate() {
   const height = document.getElementById("height").value;
 
   // Resize the renderer
-  renderer.setSize (window.innerWidth * 0.9, window.innerWidth * 0.9 * height / width);
+  renderer.setSize (window.innerWidth * 0.75, window.innerWidth * 0.75 * height / width);
   camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 600 );
 //  camera = new THREE.OrthographicCamera(0 - (width / 10), width + (width / 10), 0 - (height / 10), height + (height / 10), 0, 2000);
-  camera.position.set(width/2, height/2, 300);
+  camera.position.set(width/2, height/2, 200);
   camera.lookAt(width/2, height/2, 0);
 
   // Decompose the surface into points and triangles
@@ -147,6 +147,10 @@ function update_selected() {
   }
   geometry.addGroup(selected * 3, 3, 1);
   geometry.computeBoundingBox();
+
+  let f = document.getElementById('measurement');
+  f.value = triangles[selected].measured_height;
+  f.select();
 }
 
 document.onkeydown = function(e) {
@@ -158,6 +162,12 @@ document.onkeydown = function(e) {
       select_prev();
       break;
   }
+}
+
+document.onkeypress = function(e) {
+  if (document.activeElement == document.getElementById('measurement') &&
+      e.keyCode == 13)
+      enter_measurement();
 }
 
 function select_next() {
@@ -173,6 +183,14 @@ function select_prev() {
   renderer.render(scene, camera);
 }
 
+function enter_measurement() {
+  f = document.getElementById('measurement');
+  h = f.value;
+
+  triangles[selected].measured_height = h;
+
+  update_selected();
+}
 
 function calcError() {
   let cumulativeError = [];
@@ -186,7 +204,8 @@ function calcError() {
     t.getNormal(normal);
 
     // Take our normal and multiply to get "actual" position
-    normal.multiplyScalar(t.measured_height || 0);
+    // Measured height is in microns, so divide by 1000.
+    normal.multiplyScalar(t.measured_height / 1000 || 0);
     normal.add(midpoint);
     // Subtract our current calculated position to get the error
     error.subVectors(t.d, normal);
@@ -225,7 +244,7 @@ function correct(factor) {
 }
 
 function doit () {
-  triangles[0].measured_height = 0.05;
+  triangles[0].measured_height = 5;
 
   let e = calcError();
   let e_old = [e[0], Infinity, Infinity];
