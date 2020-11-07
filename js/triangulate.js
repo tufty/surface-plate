@@ -95,12 +95,13 @@ function decompose (radius, width, height) {
   points = points.flat();
 }
 
-var mesh, camera;
+var mesh, camera, geometry;
 const scene = new THREE.Scene();
 
 // Set up our renderer
 const renderer = new THREE.WebGLRenderer();
 document.getElementById("grid").appendChild(renderer.domElement);
+var selected = 0;
 
 function triangulate() {
   const radius = document.getElementById("radius").value;
@@ -117,15 +118,15 @@ function triangulate() {
   // Decompose the surface into points and triangles
   decompose(radius, width, height);
 
-  let geometry = new THREE.BufferGeometry();
+  geometry = new THREE.BufferGeometry();
   geometry.setIndex(Array.from(triangles, t => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)]).flat());
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(Array.from(points, p => [p.x, p.y, p.z]).flat(), 3));
 
-  geometry.addGroup(3, (triangles.length * 3) - 3, 0);
-  geometry.addGroup(0, 3, 1);
 
   materials = [ new THREE.MeshBasicMaterial( {'color': 0xffffff, 'transparent': false, 'opacity': 0.25, 'wireframe': true}),
                 new THREE.MeshBasicMaterial( {'color': 0xff0000, 'transparent': false, 'wireframe': true})];
+
+  update_selected();
 
   const mesh = new THREE.Mesh(geometry, materials);
 
@@ -134,4 +135,40 @@ function triangulate() {
   renderer.render(scene, camera);
 
   document.getElementById("triangulate-button").disabled = true;
+}
+
+function update_selected() {
+  geometry.clearGroups();
+  if (selected > 0) {
+    geometry.addGroup(0, (selected * 3) - 1, 0);
+  }
+  if (selected < triangles.length) {
+    geometry.addGroup((selected * 3) + 3, (triangles.length * 3) - (selected * 3) + 3, 0);
+  }
+  geometry.addGroup(selected * 3, 3, 1);
+  geometry.computeBoundingBox();
+}
+
+document.onkeydown = function(e) {
+  switch (e.keyCode || e.which) {
+    case 39: // Arrow right
+      select_next();
+      break;
+    case 37: // Arrow left
+      select_prev();
+      break;
+  }
+}
+
+function select_next() {
+  selected = (selected + 1) % triangles.length;
+  update_selected();
+  renderer.render(scene, camera);
+}
+
+function select_prev() {
+  selected = selected - 1;
+  if (selected < 0) selected += triangles.length;
+  update_selected();
+  renderer.render(scene, camera);
 }
