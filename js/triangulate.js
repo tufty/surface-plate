@@ -9,6 +9,9 @@ function* iota(a, b = undefined, c = undefined) {
   }
 }
 
+var triangles;
+var points;
+
 function decompose (radius, width, height) {
   // We decompose the plane into a series of overlapping rows of
   // height radius / 2.
@@ -34,7 +37,7 @@ function decompose (radius, width, height) {
     return [];  // Be better here
   }
 
-  let points = Array.from(iota(rows), function (row) {
+  points = Array.from(iota(rows), function (row) {
     let cols = (row % 2) ? cols_max - 1 : cols_max;
     let offset = (row % 2) ? h_step / 2 : 0;
     return Array.from(iota(cols), function (col) {
@@ -44,7 +47,7 @@ function decompose (radius, width, height) {
     });
   });
 
-  let triangles = Array.from(iota(rows - 3), function(row) {
+  triangles = Array.from(iota(rows - 3), function(row) {
     // First we do the downside up triangles, which are easy
     let cols = (row % 2) ? cols_max - 1 : cols_max;
     return Array.from(iota(cols - 3), function(col) {
@@ -87,6 +90,47 @@ function decompose (radius, width, height) {
       }
     });
   })).flat();
-  return triangles;
 
+  // Flatten the array of points
+  points = points.flat();
+}
+
+var mesh, camera;
+const scene = new THREE.Scene();
+
+// Set up our renderer
+const renderer = new THREE.WebGLRenderer();
+document.getElementById("grid").appendChild(renderer.domElement);
+
+function triangulate() {
+  const radius = document.getElementById("radius").value;
+  const width = document.getElementById("width").value;
+  const height = document.getElementById("height").value;
+  let material = new THREE.MeshBasicMaterial();
+
+  // Resize the renderer
+  renderer.setSize (window.innerWidth * 0.9, window.innerWidth * 0.9 * height / width);
+  camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 1000 );
+//  camera = new THREE.OrthographicCamera(0 - (width / 10), width + (width / 10), 0 - (height / 10), height + (height / 10), 0, 2000);
+  camera.position.set(width/2, height/2, 500);
+  camera.lookAt(width/2, height/2, 0);
+
+  // Decompose the surface into points and triangles
+  decompose(radius, width, height);
+
+  let geometry = new THREE.BufferGeometry();
+  geometry.setIndex(Array.from(triangles, t => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)]).flat());
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(Array.from(points, p => [p.x, p.y, p.z]).flat(), 3));
+
+  const wireframe = new THREE.WireframeGeometry(geometry);
+  const line = new THREE.LineSegments(wireframe);
+  line.material.depthTest = false;
+  line.material.opacity = 0.25;
+  line.material.transparent = true;
+
+  scene.add( line );
+
+  renderer.render(scene, camera);
+
+  document.getElementById("triangulate-button").disabled = true;
 }
