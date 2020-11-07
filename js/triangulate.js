@@ -95,12 +95,12 @@ function decompose (radius, width, height) {
   points = points.flat();
 }
 
-var mesh, camera, geometry;
-const scene = new THREE.Scene();
+var mesh_2d, camera_2d, geometry_2d;
+const scene_2d = new THREE.Scene();
 
 // Set up our renderer
-const renderer = new THREE.WebGLRenderer();
-document.getElementById("grid").appendChild(renderer.domElement);
+const render_2d = new THREE.WebGLRenderer();
+document.getElementById("grid").appendChild(render_2d.domElement);
 var selected = 0;
 
 function triangulate() {
@@ -108,45 +108,45 @@ function triangulate() {
   const width = document.getElementById("width").value;
   const height = document.getElementById("height").value;
 
-  // Resize the renderer
-  renderer.setSize (window.innerWidth * 0.75, window.innerWidth * 0.75 * height / width);
-  camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 600 );
-//  camera = new THREE.OrthographicCamera(0 - (width / 10), width + (width / 10), 0 - (height / 10), height + (height / 10), 0, 2000);
-  camera.position.set(width/2, height/2, 200);
-  camera.lookAt(width/2, height/2, 0);
+  // Resize the render_2d
+  render_2d.setSize (window.innerWidth * 0.75, window.innerWidth * 0.75 * height / width);
+  camera_2d = new THREE.PerspectiveCamera( 75, width / height, 0.1, 600 );
+//  camera_2d = new THREE.OrthographicCamera(0 - (width / 10), width + (width / 10), 0 - (height / 10), height + (height / 10), 0, 2000);
+  camera_2d.position.set(width/2, height/2, 200);
+  camera_2d.lookAt(width/2, height/2, 0);
 
   // Decompose the surface into points and triangles
   decompose(radius, width, height);
 
-  geometry = new THREE.BufferGeometry();
-  geometry.setIndex(Array.from(triangles, t => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)]).flat());
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(Array.from(points, p => [p.x, p.y, p.z]).flat(), 3));
+  geometry_2d = new THREE.BufferGeometry();
+  geometry_2d.setIndex(Array.from(triangles, t => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)]).flat());
+  geometry_2d.setAttribute('position', new THREE.Float32BufferAttribute(Array.from(points, p => [p.x, p.y, p.z]).flat(), 3));
 
 
-  materials = [ new THREE.MeshBasicMaterial( {'color': 0xffffff, 'transparent': false, 'opacity': 0.25, 'wireframe': true}),
+  materials_2d = [ new THREE.MeshBasicMaterial( {'color': 0xffffff, 'transparent': false, 'opacity': 0.25, 'wireframe': true}),
                 new THREE.MeshBasicMaterial( {'color': 0xff0000, 'transparent': false, 'wireframe': true})];
 
   update_selected();
 
-  const mesh = new THREE.Mesh(geometry, materials);
+  const mesh_2d = new THREE.Mesh(geometry_2d, materials_2d);
 
-  scene.add( mesh );
+  scene_2d.add( mesh_2d );
 
-  renderer.render(scene, camera);
+  render_2d.render(scene_2d, camera_2d);
 
   document.getElementById("triangulate-button").disabled = true;
 }
 
 function update_selected() {
-  geometry.clearGroups();
+  geometry_2d.clearGroups();
   if (selected > 0) {
-    geometry.addGroup(0, (selected * 3) - 1, 0);
+    geometry_2d.addGroup(0, (selected * 3) - 1, 0);
   }
   if (selected < triangles.length) {
-    geometry.addGroup((selected * 3) + 3, (triangles.length * 3) - (selected * 3) + 3, 0);
+    geometry_2d.addGroup((selected * 3) + 3, (triangles.length * 3) - (selected * 3) + 3, 0);
   }
-  geometry.addGroup(selected * 3, 3, 1);
-  geometry.computeBoundingBox();
+  geometry_2d.addGroup(selected * 3, 3, 1);
+  geometry_2d.computeBoundingBox();
 
   let f = document.getElementById('measurement');
   f.value = triangles[selected].measured_height;
@@ -173,14 +173,14 @@ document.onkeypress = function(e) {
 function select_next() {
   selected = (selected + 1) % triangles.length;
   update_selected();
-  renderer.render(scene, camera);
+  render_2d.render(scene_2d, camera_2d);
 }
 
 function select_prev() {
   selected = selected - 1;
   if (selected < 0) selected += triangles.length;
   update_selected();
-  renderer.render(scene, camera);
+  render_2d.render(scene_2d, camera_2d);
 }
 
 function enter_measurement() {
@@ -242,6 +242,11 @@ function correct(factor) {
   // move everything down by the average height
   points.forEach (function(p){ p.z -= avg;});
 }
+
+const render_3d = new THREE.WebGLRenderer();
+document.getElementById("3d-render").appendChild(render_3d.domElement);
+
+
 
 function doit () {
   triangles[0].measured_height = 5;
