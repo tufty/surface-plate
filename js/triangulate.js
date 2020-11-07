@@ -9,7 +9,7 @@ function* iota(a, b = undefined, c = undefined) {
   }
 }
 
-var triangles;
+var triangles, little_triangles;
 var points;
 
 function decompose (radius, width, height) {
@@ -92,11 +92,27 @@ function decompose (radius, width, height) {
   })).flat();
 
   // Little triangles for 3d render
-  // little_triangles = Array.from(iota(1, rows), function (row) {
-  //   let cols = (row % 2) ? cols_max - 1 : cols_max;
-  //   return Array.from(iota(0, cols - 1), function (col) {
-  //   });
-  // }).flat();
+  little_triangles = Array.from(iota(1, rows), function (row) {
+    if (row % 2) {
+      return Array.from(iota(0, cols_odd - 1), (col) => new THREE.Triangle ( points[row][col],
+                                                                             points[row-1][col+1],
+                                                                             points[row][col+1]));
+    } else {
+      return Array.from(iota(0, cols_even - 1), (col) => new THREE.Triangle ( points[row][col],
+                                                                              points[row-1][col],
+                                                                              points[row][col+1]));
+    }
+  }).concat(Array.from(iota(1, rows), function (row) {
+    if (row % 2) {
+      return Array.from(iota(0, cols_odd), (col) => new THREE.Triangle ( points[row][col],
+                                                                         points[row-1][col],
+                                                                         points[row-1][col+1]));
+    } else {
+      return Array.from(iota(1, cols_even - 1), (col) => new THREE.Triangle ( points[row][col],
+                                                                              points[row-1][col-1],
+                                                                              points[row-1][col]));
+    }
+  })).flat();
 
   // Flatten the array of points
   points = points.flat();
@@ -104,6 +120,9 @@ function decompose (radius, width, height) {
 
 var mesh_2d, camera_2d, geometry_2d;
 const scene_2d = new THREE.Scene();
+
+var mesh_3d, camera_3d, geometry_3d;
+const scene_3d = new THREE.Scene();
 
 // Set up our renderer
 const render_2d = new THREE.WebGLRenderer();
@@ -140,6 +159,27 @@ function triangulate() {
   scene_2d.add( mesh_2d );
 
   render_2d.render(scene_2d, camera_2d);
+
+  // And the 3d stuff
+  render_3d.setSize (window.innerWidth * 0.75, window.innerWidth * 0.75 * height / width);
+  camera_3d = new THREE.PerspectiveCamera( 75, width / height, 0.1, 600 );
+
+  camera_3d.position.set(width/2, height/2, 200);
+  camera_3d.lookAt(0, 0, 0);
+
+  geometry_3d = new THREE.BufferGeometry();
+  geometry_3d.setIndex(Array.from(little_triangles, t => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)]).flat());
+  geometry_3d.setAttribute('position', new THREE.Float32BufferAttribute(Array.from(points, p => [p.x, p.y, p.z]).flat(), 3));
+  geometry_3d.addGroup(0, little_triangles.length * 3, 0);
+
+  const mesh_3d = new THREE.Mesh(geometry_3d, new THREE.MeshPhongMaterial({'color': 0xfeed05, 'wireframe': true}));
+  scene_3d.add( mesh_3d);
+  const light_3d = new THREE.DirectionalLight( 0xffffff );
+
+  light_3d.position.set( 0, 0, 1 );
+  scene_3d.add( light_3d );
+
+  render_3d.render(scene_3d, camera_3d);
 
   document.getElementById("triangulate-button").disabled = true;
 }
