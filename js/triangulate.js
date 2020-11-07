@@ -172,3 +172,62 @@ function select_prev() {
   update_selected();
   renderer.render(scene, camera);
 }
+
+
+function calcError() {
+  let cumulativeError = [];
+  let error = new THREE.Vector3();
+  let normal = new THREE.Vector3();
+  let midpoint = new THREE.Vector3();
+
+  // Calculate error factor for each triangle
+  triangles.forEach( function(t) {
+    t.getMidpoint(midpoint);
+    t.getNormal(normal);
+
+    // Take our normal and multiply to get "actual" position
+    normal.multiplyScalar(t.measured_height);
+    normal.add(midpoint);
+    // Subtract our current calculated position to get the error
+    error.subVectors(t.d, normal);
+
+    if (Math.abs(error.z) > 0.0005) {
+      // Scale it down and add to overall error
+      cumulativeError.push(error.z);
+
+      // add a correction to the points in the triangle
+      // We assume that only the z error is relevant
+      t.a.corrections.push(error.z);
+      t.b.corrections.push(error.z);
+      t.c.corrections.push(error.z);
+    }
+  });
+
+  return [cumulativeError.reduce((a,b) => a + b, 0) / cumulativeError.length,
+          cumulativeError.reduce((a,b) => Math.max(Math.abs(a), Math.abs(b), 0)),
+          cumulativeError.reduce((a,b) => Math.min(Math.abs(a), Math.abs(b), Infinity))];
+}
+
+function correct(factor) {
+  // Apply the overall correction
+  points.forEach( function (a) {
+    a.forEach( function (p) {
+      p.z = p.corrections.reduce((a,b)=>a+b, p.z) * factor;
+      p.corrections = [];
+    })
+  });
+}
+
+function doit () {
+  triangles[0].measured_height = 0.05;
+
+  let e = calcError();
+  let e_old = [e[0], Infinity, Infinity];
+
+  while((e != e_old) && (Math.sign(e[0]) == Math.sign(e_old[0]))) {
+    console.log("Cumulative Error : ", e[0], " Max Error : ", e[1], " Min Error : ", e[2]);
+    e_old = e;
+    correct(0.01);
+    e = calcError();
+  }
+}
