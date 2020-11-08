@@ -1,10 +1,10 @@
 // Generator function giving numbers 0..n
 function* iota(a, b = undefined, c = undefined) {
   const limit = b || a;
-  const  step = c || 1;
+  const step = c || 1;
   const start = b ? a : 0;
 
-  for (let n = start; n < limit; n+= step) {
+  for (let n = start; n != limit; n+= step) {
     yield n;
   }
 }
@@ -49,69 +49,44 @@ function decompose (radius, width, height) {
 
   triangles = Array.from(iota (rows - 3), function (row){
     let t;
-    if (row % 2) {
-      return Array.from (iota (cols_odd - 3), function(col) {
-        t = new THREE.Triangle( points[row][col],
-                                points[row][col + 3],
-                                points[row + 3][col + 2]);
-        t.d = points[row + 1][col + 2];
-        t.measured_height = 0;
-        return t;
+    const o = (row % 2) ? 1 : 0;
+    const cols = (row % 2) ? cols_odd : cols_even;
+    return Array.from (iota (cols - 3), function(col) {
+      t = new THREE.Triangle( points[row][col],
+                              points[row][col + 3],
+                              points[row + 3][col + 1 + o]);
+      t.d = points[row + 1][col + 1 + o];
+      t.measured_height = 0;
+      return t;
     });
-    } else {
-      return Array.from (iota (cols_even - 3), function(col) {
-        t = new THREE.Triangle( points[row][col],
-                                points[row][col + 3],
-                                points[row + 3][col + 1]);
-        t.d = points[row + 1][col + 1];
-        t.measured_height = 0;
-        return t;
-      });
-    }
   }).concat( Array.from(iota(3, rows), function(row) {
     let t;
-    if (row % 2) {
-      return Array.from(iota(cols_odd - 3), function(col) {
-        t = new THREE.Triangle ( points[row - 3][col + 2],
-                                 points[row][col + 3],
-                                 points[row][col]);
-        t.d = points[row - 1][col + 2];
-        t.measured_height = 0;
-        return t;
-      });
-    } else {
-      return Array.from(iota(cols_even - 3), function(col) {
-        t = new THREE.Triangle ( points[row - 3][col + 1],
-                                 points[row][col + 3],
-                                 points[row][col]);
-        t.d = points[row - 1][col + 1];
-        t.measured_height = 0;
-        return t;
-      });
-    }
+    const o = (row % 2) ? 1 : 0;
+    const cols = (row % 2) ? cols_odd : cols_even;
+    return Array.from(iota(cols - 3), function(col) {
+      t = new THREE.Triangle ( points[row - 3][col + 1 + o],
+                               points[row][col + 3],
+                               points[row][col]);
+      t.d = points[row - 1][col + 1 + o];
+      t.measured_height = 0;
+      return t;
+    });
   })).flat();
 
   // Little triangles for 3d render
-  little_triangles = Array.from(iota(1, rows), function (row) {
-    if (row % 2) {
-      return Array.from(iota(0, cols_odd - 1), (col) => new THREE.Triangle ( points[row][col],
-                                                                             points[row-1][col+1],
-                                                                             points[row][col+1]));
-    } else {
-      return Array.from(iota(0, cols_even - 1), (col) => new THREE.Triangle ( points[row][col],
-                                                                              points[row-1][col],
-                                                                              points[row][col+1]));
-    }
-  }).concat(Array.from(iota(1, rows), function (row) {
-    if (row % 2) {
-      return Array.from(iota(0, cols_odd - 1), (col) => new THREE.Triangle ( points[row][col],
-                                                                         points[row-1][col],
-                                                                         points[row-1][col+1]));
-    } else {
-      return Array.from(iota(1, cols_even), (col) => new THREE.Triangle ( points[row][col],
-                                                                              points[row-1][col-1],
-                                                                              points[row-1][col]));
-    }
+  // 2 cases here.  Either cols_even is greater than cols_odd, or they are equal.
+  little_triangles = Array.from(iota(0, rows - 1), function (row) {
+    const o = (row % 2) ? 1 : 0;
+    const cols = (row % 2) ? cols_odd : cols_even;
+    return Array.from(iota(0, cols - 1), (col) => new THREE.Triangle ( points[row][col],
+                                                                       points[row][col + 1],
+                                                                       points[row + 1][col + o]));
+  }).concat( Array.from(iota(1, rows), function (row) {
+    const o = (row % 2) ? 1 : 0;
+    const cols = (row % 2) ? cols_odd : cols_even;
+    return Array.from(iota(0, cols - 1), (col) => new THREE.Triangle ( points[row][col + 1],
+                                                                       points[row][col],
+                                                                       points[row - 1][col + o]));
   })).flat();
 
   // Flatten the array of points
@@ -140,7 +115,7 @@ function triangulate() {
 
   // Resize the render_2d
   render_2d.setSize (window.innerWidth * 0.75, window.innerWidth * 0.75 * height / width);
-  camera_2d = new THREE.PerspectiveCamera( 75, width / height, 0.1, 600 );
+  camera_2d = new THREE.PerspectiveCamera( 75, width / height, 0.1, 900 );
 //  camera_2d = new THREE.OrthographicCamera(0 - (width / 10), width + (width / 10), 0 - (height / 10), height + (height / 10), 0, 2000);
   camera_2d.position.set(width/2, height/2, 200);
   camera_2d.lookAt(width/2, height/2, 0);
@@ -168,8 +143,8 @@ function triangulate() {
   render_3d.setSize (window.innerWidth * 0.75, window.innerWidth * 0.75 * height / width);
   camera_3d = new THREE.PerspectiveCamera( 75, width / height, 0.1, 600 );
 
-  camera_3d.position.set(width/2, height/2, 200);
-  camera_3d.lookAt(0, 0, 0);
+  camera_3d.position.set(width/2, height/2, 400);
+  camera_3d.lookAt(width/2, height/2, 0);
 
   // geometry_3d = new THREE.BufferGeometry();
   // geometry_3d.setIndex(Array.from(little_triangles, t => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)]).flat());
