@@ -5,12 +5,12 @@
     <title>Gridly grid</title>
     <script type="text/javascript" src="../js/vendor/three/three.js" charset="utf-8"></script>
   </head>
-  <body onload="triangulate();" >
+  <body>
     <div id="edit-controls">
       <p><label for="radius">Spherometer Radius (mm)</label><input type="number" id="radius" value="50" onchange="document.getElementById('triangulate-button').disabled = false;"></p>
       <p><label for="width">Plate Width (mm)</label><input type="number" id="width" value="170" onchange="document.getElementById('triangulate-button').disabled = false;"></p>
-      <p><label for="height">Plate Height (mm)</label><input type="number" id="height" value="200" onchange="document.getElementById('triangulate-button').disabled = false;"></p>
-      <p><input type="button" id="triangulate-button" value="Triangulate" disabled="true" onclick="triangulate();"></p>
+      <p><label for="height">Plate Height (mm)</label><input type="number" id="height" value="133" onchange="document.getElementById('triangulate-button').disabled = false;"></p>
+      <p><input type="button" id="triangulate-button" value="Triangulate" onclick="triangulate();"></p>
       <p><label for="measurement">Measured height (µm)</label><input type="number" id="measurement" value="0.00"></p>
     </div>
     <div id="grid"></div>
@@ -22,5 +22,10 @@
     <div id="3d-render">
     </div>
   </body>
-  <script type="text/javascript" src="../js/triangulate.js" charset="utf-8"></script>
+  <script type="text/javascript" src="../js/util.js" charset="utf-8"></script>
+  <script type="text/javascript" src="../js/globals.js" charset="utf-8"></script>
+  <script type="text/javascript" src="../js/geometry.js" charset="utf-8"></script>
+  <script type="text/javascript" src="../js/ui.js" charset="utf-8"></script>
+  <script type="text/javascript" src="../js/solver.js" charset="utf-8"></script>
+  <script type="text/javascript" src="../js/app.js" charset="utf-8"></script>
 </html>
