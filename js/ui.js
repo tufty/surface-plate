@@ -29,9 +29,12 @@ function geometry_data_changed(radius, width, height) {
   document.getElementById("triangulate-button").disabled = true;
 
   scene_2d.clear();
-  mesh_2d.clear();
+  mesh_2d.geometry = null;
+  mesh_2d.material = null;
   geometry_2d.clearGroups();
   geometry_2d.deleteAttribute('position');
+  geometry_2d.dispose();
+  geometry_2d = new THREE.BufferGeometry();
 
 
   // Resize the renderer

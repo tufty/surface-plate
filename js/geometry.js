@@ -13,12 +13,12 @@ function decompose (radius, width, height) {
   // For "upward" triangles
   // Row 3 -> [2,0][3,3][0,3], [3,0][4,3][1,3] ...
   // Row 4 -> [1,1][3,4][0,4], [2,1][4,4][1,4] ...
-  const h_step = radius / Math.sqrt(3);
-  const v_step = radius / 2;
-  const rows = Math.trunc(height / v_step) + 1;
-  const cols_even = Math.trunc(width / h_step) + 1;
-  const odd_offset = h_step / 2;
-  const cols_odd = Math.trunc((width - odd_offset) / h_step) + 1;
+  let h_step = radius / Math.sqrt(3);
+  let v_step = radius / 2;
+  let rows = Math.trunc(height / v_step) + 1;
+  let cols_even = Math.trunc(width / h_step) + 1;
+  let odd_offset = h_step / 2;
+  let cols_odd = Math.trunc((width - odd_offset) / h_step) + 1;
 
   // Sanity check.
   if ((rows < 3) || (cols_even < 3) || (cols_odd < 3)) {
