@@ -341,7 +341,7 @@ function export_data() {
 }
 
 let file_reader = new FileReader();
-file_reader.addEventListener('loadend', () => {data_imported();});
+file_reader.addEventListener('loadend', () => {data_loaded();});
 
 function import_data() {
   let selector = document.getElementById('import-selector');
@@ -354,6 +354,23 @@ function import_data() {
   file_reader.readAsText(selector.files[0]);
 }
 
-function data_imported() {
-  console.log(file_reader.result);
+function data_loaded() {
+  json = JSON.parse(file_reader.result);
+
+  document.getElementById("radius").value = json.radius;
+  document.getElementById("width").value = json.width;
+  document.getElementById("height").value = json.height;
+
+  points = Array.from(json.points, (p) => new THREE.Vector3(p[0], p[1], p[2]));;
+  points.forEach((p) => {p.corrections = [];});
+
+  triangles = Array.from(json.triangles, function(j) {
+    let t = new THREE.Triangle(points[j[0]], points[j[1]], points[j[2]]);
+    t.d = points[j[3]];
+    t.measured_height = j[4];
+    return t;
+  });
+
+  little_triangles = Array.from(json.little_triangles, (t) => new THREE.Triangle(points[t[0]], points[t[1]], points[t[2]]));
+
 }
