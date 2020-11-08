@@ -309,8 +309,7 @@ function correct(factor) {
 }
 
 function export_data() {
-  let selector = document.getElementById('export-selector');
-  let filename = selector.files.length ? selector.files[0].name : "surface_plate.json";
+  let filename = "surface_plate.json";
 
   let data = {radius: document.getElementById('radius').value,
               width: document.getElementById('width').value,
@@ -343,11 +342,12 @@ function export_data() {
 let file_reader = new FileReader();
 file_reader.addEventListener('loadend', () => {data_loaded();});
 
+document.getElementById('import-button').addEventListener('click', (e) => {document.getElementById('import-selector').click();}, false);
+
 function import_data() {
   let selector = document.getElementById('import-selector');
 
   if (selector.files.length == 0) {
-    alert("Please select a file to import first");
     return;
   }
 
