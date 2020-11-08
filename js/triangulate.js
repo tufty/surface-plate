@@ -309,7 +309,8 @@ function correct(factor) {
 }
 
 function export_data() {
-  let filename = "surface_plate.json";
+  let selector = document.getElementById('export-selector');
+  let filename = selector.files.length ? selector.files[0].name : "surface_plate.json";
 
   let data = {radius: document.getElementById('radius').value,
               width: document.getElementById('width').value,
@@ -337,9 +338,22 @@ function export_data() {
         location.href = 'data:application/octet-stream,' + encodeURIComponent(JSON.stringify(data));
       }
   }
-
 }
 
-function import_data() {
+let file_reader = new FileReader();
+file_reader.addEventListener('loadend', () => {data_imported();});
 
+function import_data() {
+  let selector = document.getElementById('import-selector');
+
+  if (selector.files.length == 0) {
+    alert("Please select a file to import first");
+    return;
+  }
+
+  file_reader.readAsText(selector.files[0]);
+}
+
+function data_imported() {
+  console.log(file_reader.result);
 }

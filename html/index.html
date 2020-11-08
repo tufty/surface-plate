@@ -8,16 +8,16 @@
   <body onload="triangulate();" >
     <div id="edit-controls">
       <p><label for="radius">Spherometer Radius (mm)</label><input type="number" id="radius" value="50" onchange="document.getElementById('triangulate-button').disabled = false;"></p>
-      <p><label for="width">Plate Width (mm)</label><input type="number" id="width" value="300" onchange="document.getElementById('triangulate-button').disabled = false;"></p>
-      <p><label for="height">Plate Height (mm)</label><input type="number" id="height" value="200" onchange="document.getElementById('triangulate-button').disabled = false;"></p>
+      <p><label for="width">Plate Width (mm)</label><input type="number" id="width" value="170" onchange="document.getElementById('triangulate-button').disabled = false;"></p>
+      <p><label for="height">Plate Height (mm)</label><input type="number" id="height" value="133" onchange="document.getElementById('triangulate-button').disabled = false;"></p>
       <p><input type="button" id="triangulate-button" value="Triangulate" disabled="true" onclick="triangulate();"></p>
       <p><label for="measurement">Measured height (µm)</label><input type="number" id="measurement" value="0.00"></p>
     </div>
     <div id="grid"></div>
     <div id="buttons"<
     <p><input type="button" id="solve-button" value="Solve!" onclick="solve();"></p>
-    <p><input type="button" id="export-button" value="Import" onclick="import_data();"></p>
-    <p><input type="button" id="export-button" value="Export" onclick="export_data();"></p>
+    <p><input type="file" accept=".json, text/plain" id="import-selector"><input type="button" id="import-button" value="Import" onclick="import_data();"></p>
+    <p><input type="file" accept=".json, text/plain" id="export-selector"><input type="button" id="export-button" value="Export" onclick="export_data();"></p>
     </div>
     <div id="3d-render">
     </div>
