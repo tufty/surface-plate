@@ -104,11 +104,11 @@ function decompose (radius, width, height) {
     }
   }).concat(Array.from(iota(1, rows), function (row) {
     if (row % 2) {
-      return Array.from(iota(0, cols_odd), (col) => new THREE.Triangle ( points[row][col],
+      return Array.from(iota(0, cols_odd - 1), (col) => new THREE.Triangle ( points[row][col],
                                                                          points[row-1][col],
                                                                          points[row-1][col+1]));
     } else {
-      return Array.from(iota(1, cols_even - 1), (col) => new THREE.Triangle ( points[row][col],
+      return Array.from(iota(1, cols_even), (col) => new THREE.Triangle ( points[row][col],
                                                                               points[row-1][col-1],
                                                                               points[row-1][col]));
     }
