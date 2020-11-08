@@ -116,6 +116,7 @@ function decompose (radius, width, height) {
 
   // Flatten the array of points
   points = points.flat();
+  points.forEach((p) => p.corrections=[]);
 }
 
 var mesh_2d, camera_2d, geometry_2d;
@@ -127,6 +128,9 @@ const scene_3d = new THREE.Scene();
 // Set up our renderer
 const render_2d = new THREE.WebGLRenderer();
 document.getElementById("grid").appendChild(render_2d.domElement);
+const render_3d = new THREE.WebGLRenderer();
+document.getElementById("3d-render").appendChild(render_3d.domElement);
+
 var selected = 0;
 
 function triangulate() {
@@ -167,12 +171,18 @@ function triangulate() {
   camera_3d.position.set(width/2, height/2, 200);
   camera_3d.lookAt(0, 0, 0);
 
-  geometry_3d = new THREE.BufferGeometry();
-  geometry_3d.setIndex(Array.from(little_triangles, t => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)]).flat());
-  geometry_3d.setAttribute('position', new THREE.Float32BufferAttribute(Array.from(points, p => [p.x, p.y, p.z]).flat(), 3));
-  geometry_3d.addGroup(0, little_triangles.length * 3, 0);
+  // geometry_3d = new THREE.BufferGeometry();
+  // geometry_3d.setIndex(Array.from(little_triangles, t => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)]).flat());
+  // geometry_3d.setAttribute('position', new THREE.Float32BufferAttribute(Array.from(points, p => [p.x, p.y, p.z]).flat(), 3));
+  // geometry_3d.addGroup(0, little_triangles.length * 3, 0);
 
-  const mesh_3d = new THREE.Mesh(geometry_3d, new THREE.MeshPhongMaterial({'color': 0xfeed05, 'wireframe': true}));
+  geometry_3d = new THREE.Geometry();
+  geometry_3d.vertices = points;
+  geometry_3d.faces = Array.from(little_triangles, (t) => new THREE.Face3(points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)));
+
+
+  const mesh_3d = new THREE.Mesh(geometry_3d, new THREE.MeshBasicMaterial({'color': 0xfeed05, 'wireframe': true}));
+  mesh_3d.up = new THREE.Vector3(0, 0, 1);
   scene_3d.add( mesh_3d);
   const light_3d = new THREE.DirectionalLight( 0xffffff );
 
@@ -182,6 +192,14 @@ function triangulate() {
   render_3d.render(scene_3d, camera_3d);
 
   document.getElementById("triangulate-button").disabled = true;
+}
+
+function animate() {
+
+	requestAnimationFrame( animate );
+
+	render_3d.render( scene_3d, camera_3d );
+
 }
 
 function update_selected() {
@@ -290,21 +308,38 @@ function correct(factor) {
   points.forEach (function(p){ p.z -= avg;});
 }
 
-const render_3d = new THREE.WebGLRenderer();
-document.getElementById("3d-render").appendChild(render_3d.domElement);
+function export_data() {
+  let filename = "surface_plate.json";
 
+  let data = {radius: document.getElementById('radius').value,
+              width: document.getElementById('width').value,
+              height: document.getElementById('height').value,
+              points: points.map((p) => [p.x, p.y, p.z]),
+              triangles : triangles.map((t) => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c), points.indexOf(t.d), t.measured_height]),
+              little_triangles : little_triangles.map((t) => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)]) };
 
-
-function doit () {
-  triangles[0].measured_height = 5;
-
-  let e = calcError();
-  let e_old = [e[0], Infinity, Infinity];
-
-  while((e != e_old) && (Math.sign(e[0]) == Math.sign(e_old[0]))) {
-    console.log("Cumulative Error : ", e[0], " Max Error : ", e[1], " Min Error : ", e[2]);
-    e_old = e;
-    correct(0.01);
-    e = calcError();
+  // shamelessly ripped off from StackOverflow
+  let blob = new Blob([JSON.stringify(data)], { type: 'text/json;charset=utf-8;' });
+  if (navigator.msSaveBlob) { // IE 10+
+      navigator.msSaveBlob(blob, filename);
+  } else {
+      let link = document.createElement("a");
+      if (link.download !== undefined) { // feature detection
+          // Browsers that support HTML5 download attribute
+          let url = URL.createObjectURL(blob);
+          link.setAttribute("href", url);
+          link.setAttribute("download", filename);
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+      } else {
+        location.href = 'data:application/octet-stream,' + encodeURIComponent(JSON.stringify(data));
+      }
   }
+
+}
+
+function import_data() {
+
 }
