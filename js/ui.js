@@ -28,6 +28,8 @@ function triangulate() {
 function geometry_data_changed(radius, width, height) {
   document.getElementById("triangulate-button").disabled = true;
 
+  document.getElementById("measure_count").innerText = "Measures to take : " + triangles.length;
+
   scene_2d.clear();
   mesh_2d.geometry = null;
   mesh_2d.material = null;
@@ -107,24 +109,27 @@ document.getElementById('measurement').addEventListener('keyup', function (evt) 
   }});
 
 function select_next() {
+  update_measurement();
   selected_triangle = (selected_triangle + 1) % triangles.length;
   update_selected_triangle();
   render_2d.render(scene_2d, camera_2d);
 }
 
 function select_prev() {
+  update_measurement();
   selected_triangle = selected_triangle - 1;
   if (selected_triangle < 0) selected_triangle += triangles.length;
   update_selected_triangle();
   render_2d.render(scene_2d, camera_2d);
 }
 
+function update_measurement() {
+  let field = document.getElementById('measurement');
+  triangles[selected_triangle].measured_height = field.value;
+}
+
 function enter_measurement() {
-  f = document.getElementById('measurement');
-  h = f.value;
-
-  triangles[selected_triangle].measured_height = h;
-
+  update_measurement();
   update_selected_triangle();
 }
 
