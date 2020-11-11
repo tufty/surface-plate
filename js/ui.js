@@ -1,7 +1,3 @@
-// 2d UI stuff
-var geometry_2d, camera_2d, mesh_2d, scene_2d, materials_2d;
-
-var selected_triangle;
 
 function init_2d() {
   render_2d = new THREE.WebGLRenderer();
@@ -44,12 +40,6 @@ function geometry_data_changed(radius, width, height) {
 
   // Set up the camera
   camera_2d.position.set(width / 2, height / 2, 500);
-  // camera_2d.left = 0 - (width / 10);
-  // camera_2d.right = width + (width / 10);
-  // camera_2d.top = height + (height / 10);
-  // camera_2d.bottom = 0 - (height / 10);
-  // camera_2d.near = 0.1;
-  // camera_2d.far = 1000;
   camera_2d.aspect = width / height;
   camera_2d.near = 0.1;
   camera_2d.far = 1000;
@@ -69,6 +59,18 @@ function geometry_data_changed(radius, width, height) {
   scene_2d.add(mesh_2d);
 
   render_2d.render(scene_2d, camera_2d);
+
+  camera_3d.position.set(width / 2, -5 * (height / 2), -100);
+  camera_3d.aspect = width / height;
+  camera_3d.near = 0.1;
+  camera_3d.far = Math.max(width, height) * 100;
+
+  camera_3d.lookAt(width / 2, height / 2, 0);
+  camera_3d.up = new THREE.Vector3(0,0,1);
+  camera_3d.updateProjectionMatrix();
+
+  render_3d.setSize (window.innerWidth * 0.75, window.innerWidth * 0.75 * height / width);
+
 }
 
 function update_selected_triangle() {
@@ -133,53 +135,50 @@ function enter_measurement() {
   update_selected_triangle();
 }
 
-var mesh_3d, camera_3d, geometry_3d;
-const scene_3d = new THREE.Scene();
+function init_3d() {
+  render_3d = new THREE.WebGLRenderer();
+  scene_3d = new THREE.Scene();
+  //camera_2d = new THREE.OrthographicCamera();
+  camera_3d = new THREE.PerspectiveCamera();
+  geometry_3d = new THREE.BufferGeometry();
+  mesh_3d = new THREE.Mesh();
 
-const render_3d = new THREE.WebGLRenderer();
-document.getElementById("3d-render").appendChild(render_3d.domElement);
+  mesh_3d.material = new THREE.MeshBasicMaterial( { wireframe: true, side: THREE.DoubleSide, vertexColors: true});
 
+  document.getElementById("3d-render").appendChild(render_3d.domElement);
 
+}
 
+function solve() {
+  calc_error();
+  correct(0.25);
 
+  scene_3d.clear()
+  scene_2d.clear();
+  mesh_3d.geometry = null;
+  geometry_3d.clearGroups();
+  geometry_3d.deleteAttribute('position');
+  geometry_3d.dispose();
+  geometry_3d = new THREE.BufferGeometry();
 
-  function triangulold() {
-    // And the 3d stuff
-    render_3d.setSize (window.innerWidth * 0.75, window.innerWidth * 0.75 * height / width);
-    camera_3d = new THREE.PerspectiveCamera( 75, width / height, 0.1, 600 );
+  let z_max = points.reduce((a, p) => Math.max(a, Math.abs(p.z)), 0);
 
-    camera_3d.position.set(width/2, height/2, 400);
-    camera_3d.lookAt(width/2, height/2, 0);
+  geometry_3d.setAttribute('position', new THREE.Float32BufferAttribute(Array.from(points, p => [p.x, p.y, p.z * 100]).flat(), 3));
+  geometry_3d.setAttribute('color', new THREE.Float32BufferAttribute(Array.from(points, p => [Math.abs(p.z) / z_max, 1 - (Math.abs(p.z) / z_max), 0.0]).flat(), 3));
+  geometry_3d.setIndex(Array.from(little_triangles, t => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)]).flat());
+  geometry_3d.computeVertexNormals();
 
-    // geometry_3d = new THREE.BufferGeometry();
-    // geometry_3d.setIndex(Array.from(little_triangles, t => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)]).flat());
-    // geometry_3d.setAttribute('position', new THREE.Float32BufferAttribute(Array.from(points, p => [p.x, p.y, p.z]).flat(), 3));
-    // geometry_3d.addGroup(0, little_triangles.length * 3, 0);
+  mesh_3d.geometry = geometry_3d;
+  scene_3d.add(mesh_3d);
 
-    geometry_3d = new THREE.Geometry();
-    geometry_3d.vertices = points;
-    geometry_3d.faces = Array.from(little_triangles, (t) => new THREE.Face3(points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)));
+  render_3d.render(scene_3d, camera_3d);
+}
 
+function animate() {
+	requestAnimationFrame( animate );
 
-    const mesh_3d = new THREE.Mesh(geometry_3d, new THREE.MeshBasicMaterial({'color': 0xfeed05, 'wireframe': true}));
-    mesh_3d.up = new THREE.Vector3(0, 0, 1);
-    scene_3d.add( mesh_3d);
-    const light_3d = new THREE.DirectionalLight( 0xffffff );
-
-    light_3d.position.set( 0, 0, 1 );
-    scene_3d.add( light_3d );
-
-    render_3d.render(scene_3d, camera_3d);
-
-  }
-
-  function animate() {
-
-  	requestAnimationFrame( animate );
-
-  	render_3d.render( scene_3d, camera_3d );
-
-  }
+	render_3d.render( scene_3d, camera_3d );
+}
 
 
 function export_data() {

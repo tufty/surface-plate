@@ -1,4 +1,4 @@
-function calcError() {
+function calc_error() {
   let cumulativeError = [];
   let error = new THREE.Vector3();
   let normal = new THREE.Vector3();
