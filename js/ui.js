@@ -60,10 +60,11 @@ function geometry_data_changed(radius, width, height) {
 
   render_2d.render(scene_2d, camera_2d);
 
-  camera_3d.position.set(width / 2, -5 * (height / 2), -100);
+  camera_3d.position.set(width / 2, -3 * (height / 2), 300);
   camera_3d.aspect = width / height;
   camera_3d.near = 0.1;
   camera_3d.far = Math.max(width, height) * 100;
+  camera_3d.zoom = 2.0;
 
   camera_3d.lookAt(width / 2, height / 2, 0);
   camera_3d.up = new THREE.Vector3(0,0,1);
@@ -146,13 +147,17 @@ function init_3d() {
   mesh_3d.material = new THREE.MeshBasicMaterial( { wireframe: true, side: THREE.DoubleSide, vertexColors: true});
 
   document.getElementById("3d-render").appendChild(render_3d.domElement);
-
 }
 
 function solve() {
-  calc_error();
-  correct(0.25);
+  for (let i = 0; i < 10000; i++) {
+    calc_error();
+    correct(0.01);
+  }
+  update_3d();
+}
 
+function update_3d() {
   scene_3d.clear()
   scene_2d.clear();
   mesh_3d.geometry = null;
@@ -161,10 +166,11 @@ function solve() {
   geometry_3d.dispose();
   geometry_3d = new THREE.BufferGeometry();
 
-  let z_max = points.reduce((a, p) => Math.max(a, Math.abs(p.z)), 0);
+//  let z_max = points.reduce((a, p) => Math.max(a, Math.abs(p.z)), 0);
 
-  geometry_3d.setAttribute('position', new THREE.Float32BufferAttribute(Array.from(points, p => [p.x, p.y, p.z * 100]).flat(), 3));
-  geometry_3d.setAttribute('color', new THREE.Float32BufferAttribute(Array.from(points, p => [Math.abs(p.z) / z_max, 1 - (Math.abs(p.z) / z_max), 0.0]).flat(), 3));
+  geometry_3d.setAttribute('position', new THREE.Float32BufferAttribute(Array.from(points, p => [p.x, p.y, p.z * 200]).flat(), 3));
+//  geometry_3d.setAttribute('color', new THREE.Float32BufferAttribute(Array.from(points, p => [Math.abs(p.z) / z_max, 1 - (Math.abs(p.z) / z_max), 0.0]).flat(), 3));
+  geometry_3d.setAttribute('color', new THREE.Float32BufferAttribute(Array.from(points, p => [lim(p.z, 0.01) / 0.01, 1 - (lim (p.z, 0.01) / 0.01), 0]).flat(), 3));
   geometry_3d.setIndex(Array.from(little_triangles, t => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)]).flat());
   geometry_3d.computeVertexNormals();
 
@@ -174,9 +180,9 @@ function solve() {
   render_3d.render(scene_3d, camera_3d);
 }
 
+
 function animate() {
 	requestAnimationFrame( animate );
-
 	render_3d.render( scene_3d, camera_3d );
 }
 

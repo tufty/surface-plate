@@ -1,3 +1,5 @@
+var step = 3;
+
 function calc_error() {
   let cumulativeError = [];
   let error = new THREE.Vector3();
@@ -20,11 +22,24 @@ function calc_error() {
       // Scale it down and add to overall error
       cumulativeError.push(error.z);
 
-      // add a correction to the points in the triangle
-      // We assume that only the z error is relevant
-      t.a.corrections.push(error.z);
-      t.b.corrections.push(error.z);
-      t.c.corrections.push(error.z);
+      // Dependent on step, we either add a correction of error to one of a, b, or c,
+      // and subtract error / 2 from d.  This is more or less equivalent to rotating
+      // the triangle around the opposing edge, and doesn't use much computing power.
+      // We can get away with this because we're talking about arcseconds, so it's only really
+      // the z coordinate that matters.
+      step = step++ % 3;
+      switch (step) {
+        case 0 :
+          t.a.corrections.push(error.z);
+          break;
+        case 1 :
+          t.b.corrections.push(error.z);
+          break;;
+        case 2 :
+          t.c.corrections.push(error.z);
+          break;
+      }
+      t.d.corrections.push(- error.z / 2);
     }
   });
 
