@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Surface Plate Mapper</title>
+    <style media="screen">
+      div#content > div:not(:target) { display:none; }
+      div#content > div:target {display:block; }
+    </style>
+    <script src="../js/vendor/math.js" charset="utf-8"></script>
+    <script src="../js/util.js" charset="utf-8"></script>
+    <script src="../js/level.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <h1>Surface Plate Mapper</h1>
+    <div id="globals">
+      <p>
+      <label for="sensitivity">Level Sensitivity per Graduation (mm/m)</label>
+      <input type="number" name="sensitivity" id="sensitivity" value="0.02" onchange="dimension_change();">
+      <label for="length">Reading Length (mm)</label>
+      <input type="number" name="length" id="length" value="100" onchange="dimension_change();">
+      <label for="um-grad">Distance per Graduation per Reading (µm)</label>
+      <input type="number" name="um-grad" id="um-grad" value="2" disabled="true">
+      </p>
+      <p>
+        <label for="width">Plate Width (mm)</label>
+        <input type="number" name="width" id="width" value="400">
+        <label for="breadth">Plate Breadth (mm)</label>
+        <input type="number" name="breadth" id="breadth" value="300">
+      </p
+    </div>
+    <div id="tabs">
+      <a href="#jmr06">Grid</a>
+      <a href="#moody">Moody</a>
+    </div>
+    <div id="content">
+      <div id="jmr06">
+        <h2>Grid Decomposition</h2>
+        <div class="controls" id="jmr06-controls">
+          <label for="jmr06-samples">Grid Spacing (mm)</label>
+          <input type="number" name="jmr06-samples" id="jmr06-samples" value="100" disabled="true">
+          <input type="button" name="jmr06-decompose" id="jmr06-decompose" value="Create Grid" onclick="jmr06_decompose();">
+        </div>
+        <div id="jmr06-grid">
+        </div>
+        <div id="jmr06-results">
+        </div>
+      </div>
+      <div id="moody">
+        <h2>Moody Decomposition</h2>
+      </div>
+    </div>
+  </body>
+</html>
