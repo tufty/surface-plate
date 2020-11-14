@@ -1,4 +1,14 @@
-var step = 3;
+function do_solve() {
+  let m = Infinity;
+  let erf = calc_error();
+
+  while (erf[1] < m) {
+    correct(0.1);
+    m = Math.min(erf[1], m);
+    erf = calc_error();
+  }
+}
+
 
 function calc_error() {
   let cumulativeError = [];
@@ -20,15 +30,13 @@ function calc_error() {
 
     if (Math.abs(error.z) > 0.0005) {
       // Scale it down and add to overall error
-      cumulativeError.push(error.z);
+      cumulativeError.push(Math.abs(error.z));
 
-      // Dependent on step, we either add a correction of error to one of a, b, or c,
-      // and subtract error / 2 from d.  This is more or less equivalent to rotating
-      // the triangle around the opposing edge, and doesn't use much computing power.
-      // We can get away with this because we're talking about arcseconds, so it's only really
-      // the z coordinate that matters.
-      step = step++ % 3;
-      switch (step) {
+      // Dependent on step, we add a correction of to one of a, b, or c, and another
+      // to d, in order to approximate the rotation of the triangle around one of its sides.
+      // these corrections should be such that the "further" correction is three times that
+      // of the "nearer" one.
+      switch (Math.floor(Math.random() * 3)) {
         case 0 :
           t.a.corrections.push(error.z);
           break;
@@ -39,7 +47,7 @@ function calc_error() {
           t.c.corrections.push(error.z);
           break;
       }
-      t.d.corrections.push(- error.z / 2);
+    t.d.corrections.push(error.z / 3);
     }
   });
 

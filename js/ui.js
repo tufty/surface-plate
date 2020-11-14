@@ -150,10 +150,7 @@ function init_3d() {
 }
 
 function solve() {
-  for (let i = 0; i < 10000; i++) {
-    calc_error();
-    correct(0.01);
-  }
+  do_solve();
   update_3d();
 }
 
@@ -170,7 +167,7 @@ function update_3d() {
 
   geometry_3d.setAttribute('position', new THREE.Float32BufferAttribute(Array.from(points, p => [p.x, p.y, p.z * 200]).flat(), 3));
 //  geometry_3d.setAttribute('color', new THREE.Float32BufferAttribute(Array.from(points, p => [Math.abs(p.z) / z_max, 1 - (Math.abs(p.z) / z_max), 0.0]).flat(), 3));
-  geometry_3d.setAttribute('color', new THREE.Float32BufferAttribute(Array.from(points, p => [lim(p.z, 0.01) / 0.01, 1 - (lim (p.z, 0.01) / 0.01), 0]).flat(), 3));
+  geometry_3d.setAttribute('color', new THREE.Float32BufferAttribute(Array.from(points, p => point_color(p, 0.01)).flat(), 3));
   geometry_3d.setIndex(Array.from(little_triangles, t => [points.indexOf(t.a), points.indexOf(t.b), points.indexOf(t.c)]).flat());
   geometry_3d.computeVertexNormals();
 
@@ -178,6 +175,11 @@ function update_3d() {
   scene_3d.add(mesh_3d);
 
   render_3d.render(scene_3d, camera_3d);
+}
+
+function point_color (p, l) {
+  let z = lim(p.z, l);
+  return [(z / l), 1.0 - (z / l), 0];
 }
 
 

@@ -10,11 +10,9 @@ function* iota(a, b = undefined, c = undefined) {
 }
 
 function lim(n, l) {
-  if (n > l) {
+  if (Math.abs(n) > l) {
     return l;
-  } else if (Math.abs(n) > l) {
-    return -l;
   } else {
-    return n;
+    return Math.abs(n);
   }
 }
