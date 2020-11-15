@@ -5,9 +5,13 @@
     <title>Surface Plate Mapper</title>
     <style media="screen">
       div#content > div:not(:target) { display:none; }
-      div#content > div:target {display:block; }
+      div#content > div:target { display:block; }
+      table { border: 1px; background-color: grey; }
+      tr input { width: 4em; text-align: right; }
+      th { min-width: 4em; }
     </style>
     <script src="../js/vendor/math.js" charset="utf-8"></script>
+    <script src="../js/vendor/three/three.js" charset="utf-8"></script>
     <script src="../js/util.js" charset="utf-8"></script>
     <script src="../js/level.js" charset="utf-8"></script>
   </head>
@@ -44,11 +48,23 @@
         <div id="jmr06-grid">
         </div>
         <div id="jmr06-results">
+          <label for="jmr06-rms">RMS Error</label>
+          <input type="number" name="jmr06-rms" id="jmr06-rms" value="" disabled="true">
+
+          <h3>Raw results (µm)</h3>
+          <p id="jmr06-raw"></p>
+          <h3>Corrected results (µm from best plane)</h3>
+          <p id="jmr06-adj"></p>
+          <h3>Material to Remove (µm)</h3>
+          <p id="jmr06-off"></p>
+
         </div>
       </div>
       <div id="moody">
         <h2>Moody Decomposition</h2>
       </div>
+    </div>
+    <div id="render">
     </div>
   </body>
 </html>
