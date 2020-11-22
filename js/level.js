@@ -12,7 +12,7 @@ window.addEventListener('load', function () {
   }
 
   mesh = new THREE.Mesh;
-  mesh.material = new THREE.MeshBasicMaterial( {wireframe: true, side: THREE.DoubleSide, vertexColors: true });
+  mesh.material = new THREE.MeshBasicMaterial( {wireframe: true, side: THREE.DoubleSide, color: 0xffffff, vertexColors: false });
   scene = new THREE.Scene;
   camera = new THREE.PerspectiveCamera;
   renderer = new THREE.WebGLRenderer();
@@ -153,14 +153,16 @@ function v_reading_row(row, cols) {
 
 function dimension_change() {
   document.getElementById('um-grad').value = document.getElementById('sensitivity').value * document.getElementById('length').value;
+  let width = document.getElementById('width').value;
+  let breadth = document.getElementById('breadth').value;
 
-  camera.position.set(width / 2, 200, -3 * (breadth / 2));
+  camera.position.set(width / 2, 200, 3 * (breadth / 2));
   camera.aspect = 16 / 9;
   camera.near = 0.1;
   camera.far = Math.max(width, breadth) * 100;
-  camera.zoom = 2.0;
+  camera.zoom = 0.5;
 
-  camera.lookAt(width / 2, breadth / 2, 0);
+  camera.lookAt(width / 2, 0, breadth / 2,);
   camera.updateProjectionMatrix();
 }
 
@@ -248,23 +250,26 @@ function jmr06_calc(evt) {
     }
   }
 
+  // Here we re-derive jrm's stuff.
+  // Fit to plane according to Ben's answer to
+  // https://math.stackexchange.com/questions/99299/best-fitting-plane-given-a-set-of-points
+
   let B = math.zeros(points, 3);
-  B.subset(math.index(math.range(0, points), 0), Array.from(iota(points), (p) => 1));
-  let row = 0;
   for (const i of iota(h_rows)) {
     for (const j of iota (v_cols)) {
-      B.subset(math.index(row, [1,2]), [i, j]);
-      row++;
+      B.subset(math.index(j + (i * v_cols), [0,1,2]), [i * length, j * length, 1]);
     }
   }
+
   let Bt = math.transpose(B);
+  let piB = math.multiply(math.inv(math.multiply(Bt, B)), Bt);
+  let plane = math.multiply(piB, piAM);
 
-  let BtB = math.multiply(Bt, B);
-  let iBtB = math.inv(BtB);
-  let piB = math.multiply(iBtB, Bt);
-  let piBP = math.multiply(piB, piAM);
+  // We have the plane coefficients ax + by + c = z in plane
+  // calculate the on-plane z coordinates for each sample
+  let Pc = math.multiply(B, plane);
 
-  let Pc = math.multiply(B, piBP);
+  //let diff = math.subtract(piAM, Pc);
   let diff = math.subtract(Pc, piAM);
   let minimum = math.min(diff);
   let average = math.mean(diff);
@@ -287,7 +292,7 @@ function jmr06_calc(evt) {
   // Build up some 3d.
   let points_3d = Array.from(iota(h_rows), function (row) {
     return Array.from(iota(v_cols), function (col) {
-      return [col * length, results[(row * v_cols) + col][2], row * length];
+      return [col * length, results[(row * v_cols) + col][2] / 10, row * length];
     });
   });
 
@@ -304,7 +309,7 @@ function jmr06_calc(evt) {
 
   let geom = new THREE.BufferGeometry()
   geom.setAttribute('position', new THREE.Float32BufferAttribute(points_3d.flat().flat(), 3));
-  //geom.setAttribute('color', new THREE.Float32BufferAttribute(points_3d.map((p) => []), 3));
+//  geom.setAttribute('color', new THREE.Float32BufferAttribute(points_3d.map((p) => [1, 1, 1]).flat().flat(), 3));
   geom.setIndex(indices);
   geom.computeVertexNormals();
 

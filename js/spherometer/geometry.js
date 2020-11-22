@@ -79,3 +79,20 @@ function decompose (radius, width, height) {
   points = points.flat();
   points.forEach((p) => p.corrections=[]);
 }
+
+function sphere_solver() {
+  // Assume each triangle is flat, on the xy plane.  If measured height is non zero,
+  // assume that this is a spherical reading, and find the centre of its sphere
+  triangles.forEach( function (triangle) {
+    triangle.norm_a = new THREE.Vector3(0,0,1);
+    triangle.norm_b = new THREE.Vector3(0,0,1);
+    triangle.norm_c = new THREE.Vector3(0,0,1);
+    if (triangle.measured_height) {
+      let centre = sphere_centre(triangle);
+      triangle.norm_a.subVectors(triangle.a, centre);
+      triangle.norm_b.subVectors(triangle.b, centre);
+      triangle.norm_c.subVectors(triangle.c, centre);
+    }
+  })
+
+}
