@@ -174,6 +174,14 @@ function jmr06_grads_to_microns(n) {
   return document.getElementById('length').value * document.getElementById('sensitivity').value * n;
 }
 
+// Calculate the left pseudo inverse of a matrix.
+function pseudo_inverse(A) {
+  let At = math.transpose(A);
+  let AtA = math.multiply(At, A);
+  let iAtA = math.inv(AtA);  // Not the International Air Travel Association
+  return math.multiply(iAtA, At);
+}
+
 function jmr06_calc(_) {
   let width = document.getElementById('width').value;
   let breadth = document.getElementById('breadth').value;
@@ -209,9 +217,6 @@ function jmr06_calc(_) {
     matrix_row = matrix_row + 1;
   }
 
-  // Do this sensibly.
-  let At = math.transpose(A);
-
   // Now create M, which is a vector of the measurements converted from graduations to microns
   let M = math.zeros(measures);
   // Get the horizontal readings
@@ -226,20 +231,44 @@ function jmr06_calc(_) {
     let readings = Array.from(iota(v_cols), (col) => jmr06_grads_to_microns(document.getElementById("jmr06-vert-" + row + "-" + col).value));
     M.subset(math.index(indices), readings);
   }
-
-  // We now have the basics done.  Calculate the pseudo inverse of A
+  // We now have the basics done.  Calculate the pseudo inverse of A.
+  // Only do a subset of A, as we treat the "bottom right" measurement as zero
   let rm = math.range(0, measures);
   let rp = math.range(0, points - 1);
-  let Asub = A.subset(math.index(rm, rp));
-  let Atsub = At.subset(math.index(rp, rm));
-  let AtA = math.multiply(Atsub, Asub);   // At * A
-  let iAtA = math.inv(AtA);     // Inverse of iAtA
-  let piA = math.multiply(iAtA, Atsub); // Pseudo inverse of A
 
+  let piA = pseudo_inverse(A.subset(math.index(rm, rp)));
   let piAM = math.multiply(piA, M);
   piAM.resize([points], 0);
 
   let Mc = math.multiply(A, piAM);
+
+  // Here we re-derive jrm's stuff.
+  // Fit to plane according to Ben's answer to
+  // https://math.stackexchange.com/questions/99299/best-fitting-plane-given-a-set-of-points
+
+  let B = math.zeros(points, 3);
+  for (const i of iota(h_rows)) {
+    for (const j of iota (v_cols)) {
+      B.subset(math.index(j + (i * v_cols), [0,1,2]), [i * length, j * length, 1]);
+    }
+  }
+  let piB = pseudo_inverse(B);
+  let coeffs = math.multiply(piB, piAM);
+
+  // We have the plane coefficients ax + by + c = z in plane
+  // calculate the on-plane z coordinates for each sample
+  let Pc = math.multiply(B, coeffs);
+
+  //let diff = math.subtract(piAM, Pc);
+  let diff = math.subtract(Pc, piAM);
+  let minimum = math.min(diff);
+  let average = math.mean(diff);
+
+  let results = Array.from (iota(points), function(p) {
+    let v = diff.subset(math.index(p));
+    return [Pc.subset(math.index(p)), v, v - average, v - minimum ];
+  });
+
 
   // Calculate RMS error
   let rms = Math.sqrt(math.sum(math.map(math.subtract(M, Mc), (x) => x * x)) / M.size());
@@ -253,34 +282,6 @@ function jmr06_calc(_) {
     }
   }
 
-  // Here we re-derive jrm's stuff.
-  // Fit to plane according to Ben's answer to
-  // https://math.stackexchange.com/questions/99299/best-fitting-plane-given-a-set-of-points
-
-  let B = math.zeros(points, 3);
-  for (const i of iota(h_rows)) {
-    for (const j of iota (v_cols)) {
-      B.subset(math.index(j + (i * v_cols), [0,1,2]), [i * length, j * length, 1]);
-    }
-  }
-
-  let Bt = math.transpose(B);
-  let piB = math.multiply(math.inv(math.multiply(Bt, B)), Bt);
-  let plane = math.multiply(piB, piAM);
-
-  // We have the plane coefficients ax + by + c = z in plane
-  // calculate the on-plane z coordinates for each sample
-  let Pc = math.multiply(B, plane);
-
-  //let diff = math.subtract(piAM, Pc);
-  let diff = math.subtract(Pc, piAM);
-  let minimum = math.min(diff);
-  let average = math.mean(diff);
-
-  let results = Array.from (iota(points), function(p) {
-    let v = diff.subset(math.index(p));
-    return [Pc.subset(math.index(p)), v, v - average, v - minimum ];
-  })
 
   // Output the final measurements
   for (const row of iota(h_rows)) {
