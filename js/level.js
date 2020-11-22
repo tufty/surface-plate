@@ -30,7 +30,6 @@ function jmr06_decompose() {
   let width = document.getElementById('width').value;
   let breadth = document.getElementById('breadth').value;
   let length = document.getElementById('length').value;
-  let sample = document.getElementById('jmr06-samples').value;
 
   // The number of samples in a direction is <dimension> / <length> + 1
   let cols = Math.floor(width / length) + 1;
@@ -47,7 +46,7 @@ function jmr06_decompose() {
   let tr = document.createElement('tr');
   tr.appendChild(document.createElement('td'));
   let th;
-  Array.from(iota(cols - 1)).forEach(function(col) {
+  Array.from(iota(cols - 1)).forEach(function(_) {
     th = document.createElement('th');
     th.appendChild(document.createTextNode("v reading"));
     tr.appendChild(th);
@@ -80,11 +79,8 @@ function jmr06_decompose() {
   document.getElementById('jmr06-off').clearChildren();
   document.getElementById('jmr06-off').appendChild(off_table);
 
-  let b = document.createElement('input');
-  b.type = 'button';
-  b.value = 'Calculate';
-  b.addEventListener('click', jmr06_calc);
-  grid_div.appendChild(b)
+  document.getElementById('jmr06-calc').hidden = false;
+  document.getElementById('jmr06-decompose').hidden = true;
 }
 
 function results_row(n, row, cols) {
@@ -151,8 +147,12 @@ function v_reading_row(row, cols) {
 
 }
 
-function dimension_change() {
+function sensitivity_change() {
   document.getElementById('um-grad').value = document.getElementById('sensitivity').value * document.getElementById('length').value;
+}
+
+function dimension_change() {
+  sensitivity_change();
   let width = document.getElementById('width').value;
   let breadth = document.getElementById('breadth').value;
 
@@ -164,17 +164,20 @@ function dimension_change() {
 
   camera.lookAt(width / 2, 0, breadth / 2,);
   camera.updateProjectionMatrix();
+
+  document.getElementById('jmr06-decompose').hidden = false;
+  document.getElementById('jmr06-calc').hidden = true;
+  document.getElementById('jmr06-results').hidden = true;
 }
 
 function jmr06_grads_to_microns(n) {
   return document.getElementById('length').value * document.getElementById('sensitivity').value * n;
 }
 
-function jmr06_calc(evt) {
+function jmr06_calc(_) {
   let width = document.getElementById('width').value;
   let breadth = document.getElementById('breadth').value;
   let length = document.getElementById('length').value;
-  let sample = document.getElementById('jmr06-samples').value;
 
   let h_cols = Math.floor(width / length);
   let v_cols = h_cols + 1;
@@ -282,8 +285,8 @@ function jmr06_calc(evt) {
   // Output the final measurements
   for (const row of iota(h_rows)) {
     for (const col of iota(v_cols)) {
-      let adj = results[(row * v_cols) + col][2].toFixed(2);
-      let off = results[(row * v_cols) + col][3].toFixed(2);
+      let adj = results[(row * v_cols) + col][2].toFixed(1);
+      let off = results[(row * v_cols) + col][3].toFixed(1);
       document.getElementById("jmr06-adj-" + row + "-" + col).innerHTML = adj;
       document.getElementById("jmr06-off-" + row + "-" + col).innerHTML = off;
     }
@@ -315,5 +318,8 @@ function jmr06_calc(evt) {
 
   mesh.geometry = geom;
   scene.add(mesh);
-  renderer.render (scene, camera)
+  renderer.render (scene, camera);
+
+  document.getElementById('jmr06-results').hidden = false;
+
 }

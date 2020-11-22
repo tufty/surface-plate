@@ -3,68 +3,116 @@
   <head>
     <meta charset="utf-8">
     <title>Surface Plate Mapper</title>
-    <style media="screen">
-      div#content > div:not(:target) { display:none; }
-      div#content > div:target { display:block; }
-      table { border: 1px; background-color: grey; }
-      tr input { width: 4em; text-align: right; }
-      th { min-width: 4em; }
-    </style>
     <script src="../js/vendor/math.js" charset="utf-8"></script>
     <script src="../js/vendor/three/three.js" charset="utf-8"></script>
     <script src="../js/util.js" charset="utf-8"></script>
     <script src="../js/level.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="../css/level.css">
   </head>
   <body>
     <h1>Surface Plate Mapper</h1>
+    <br clear="all" />
     <div id="globals">
+      <h3>Level Details</h3>
       <p>
       <label for="sensitivity">Level Sensitivity per Graduation (mm/m)</label>
-      <input type="number" name="sensitivity" id="sensitivity" value="0.02" onchange="dimension_change();">
+      <input type="number" name="sensitivity" id="sensitivity" value="0.02" onchange="sensitivity_change();">
       <label for="length">Reading Length (mm)</label>
       <input type="number" name="length" id="length" value="100" onchange="dimension_change();">
       <label for="um-grad">Distance per Graduation per Reading (µm)</label>
       <input type="number" name="um-grad" id="um-grad" value="2" disabled="true">
       </p>
+      <h3>Surface Plate Details</h3>
       <p>
         <label for="width">Plate Width (mm)</label>
-        <input type="number" name="width" id="width" value="400">
+        <input type="number" name="width" id="width" value="400" onchange="dimension_change();">
         <label for="breadth">Plate Breadth (mm)</label>
-        <input type="number" name="breadth" id="breadth" value="300">
-      </p
+        <input type="number" name="breadth" id="breadth" value="300" onchange="dimension_change();">
+      </p>
     </div>
-    <div id="tabs">
-      <a href="#jmr06">Grid</a>
-      <a href="#moody">Moody</a>
-    </div>
-    <div id="content">
-      <div id="jmr06">
-        <h2>Grid Decomposition</h2>
-        <div class="controls" id="jmr06-controls">
-          <label for="jmr06-samples">Grid Spacing (mm)</label>
-          <input type="number" name="jmr06-samples" id="jmr06-samples" value="100" disabled="true">
-          <input type="button" name="jmr06-decompose" id="jmr06-decompose" value="Create Grid" onclick="jmr06_decompose();">
+    <ul class="tabs" role="tablist">
+      <li>
+        <input type="radio" name="tabs" id="tab1" checked />
+        <label for="tab1"
+               role="tab"
+               aria-selected="true"
+               aria-controls="panel1"
+               tabindex="0">Grid</label>
+        <div id="tab-content1"
+             class="tab-content"
+             role="tabpanel"
+             aria-labelledby="Grid"
+             aria-hidden="false">
+             <h2>Grid Decomposition</h2>
+           <div id="jmr06-grid">
+           </div>
+           <div class="controls" id="jmr06-controls">
+             <input type="button" name="jmr06-decompose" id="jmr06-decompose" value="Create Grid" onclick="jmr06_decompose();">
+             <input type="button" name="jmr06-calc" id="jmr06-calc" value="Calculate" onclick="jmr06_calc();">
+           </div>
         </div>
-        <div id="jmr06-grid">
-        </div>
-        <div id="jmr06-results">
-          <label for="jmr06-rms">RMS Error</label>
-          <input type="number" name="jmr06-rms" id="jmr06-rms" value="" disabled="true">
+      </li>
+      <li>
+        <input type="radio" name="tabs" id="tab2" />
+        <label for="tab2"
+               role="tab"
+               aria-selected="true"
+               aria-controls="panel2"
+               tabindex="0">Moody</label>
+        <div id="tab-content2"
+             class="tab-content"
+             role="tabpanel"
+             aria-labelledby="Moody"
+             aria-hidden="false">
+             <h2>Moody Decomposition</h2>
 
-          <h3>Raw results (µm)</h3>
-          <p id="jmr06-raw"></p>
-          <h3>Corrected results (µm from best plane)</h3>
-          <p id="jmr06-adj"></p>
-          <h3>Material to Remove (µm)</h3>
-          <p id="jmr06-off"></p>
+          <p>Currently Unimplemented</p>
+        </div>
+      </li>
+      <li>
+        <input type="radio" name="tabs" id="tab3" />
+        <label for="tab3"
+               role="tab"
+               aria-selected="true"
+               aria-controls="panel3"
+               tabindex="0">Results</label>
+        <div id="tab-content2"
+             class="tab-content"
+             role="tabpanel"
+             aria-labelledby="Results"
+             aria-hidden="false">
+             <h2>Results</h2>
+             <div id="jmr06-results">
+               <label for="jmr06-rms">RMS Error</label>
+               <input type="number" name="jmr06-rms" id="jmr06-rms" value="" disabled="true">
+
+               <h3>Raw results (µm)</h3>
+               <p id="jmr06-raw"></p>
+               <h3>Corrected results (µm from best plane)</h3>
+               <p id="jmr06-adj"></p>
+               <h3>Material to Remove (µm)</h3>
+               <p id="jmr06-off"></p>
+             </div>
 
         </div>
+      </li>
+      <li>
+        <input type="radio" name="tabs" id="tab4" />
+        <label for="tab4"
+               role="tab"
+               aria-selected="true"
+               aria-controls="panel4"
+               tabindex="0">Graphic</label>
+        <div id="tab-content4"
+             class="tab-content"
+             role="tabpanel"
+             aria-labelledby="Graphic"
+             aria-hidden="false">
+             <h2>Graphical Representation</h2>
+          <p id="render"></p>
+        </div>
+      </li>
       </div>
-      <div id="moody">
-        <h2>Moody Decomposition</h2>
-      </div>
-    </div>
-    <div id="render">
     </div>
   </body>
 </html>
