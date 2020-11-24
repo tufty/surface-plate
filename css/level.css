@@ -138,6 +138,7 @@ th {
 #jmr06-results td {
   margin-right: 5px;
   margin-left: 5px;
+  width: fit-content;
 }
 
 #jmr06-results td > span {

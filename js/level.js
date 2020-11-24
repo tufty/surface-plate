@@ -259,6 +259,7 @@ function jmr06_calc(_) {
   // calculate the on-plane z coordinates for each sample
   let Pc = math.multiply(B, coeffs);
 
+  // Something fucked going on here
   //let diff = math.subtract(piAM, Pc);
   let diff = math.subtract(Pc, piAM);
   let minimum = math.min(diff);
