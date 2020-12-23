@@ -70,14 +70,14 @@ function jmr06_decompose() {
   adj_table.appendChild(results_row("adj", rows - 1, cols));
   off_table.appendChild(results_row("off", rows - 1, cols));
 
-  grid_div.appendChild(readings_table);
-
   document.getElementById('jmr06-raw').clearChildren();
   document.getElementById('jmr06-raw').appendChild(raw_table);
   document.getElementById('jmr06-adj').clearChildren();
   document.getElementById('jmr06-adj').appendChild(adj_table);
   document.getElementById('jmr06-off').clearChildren();
   document.getElementById('jmr06-off').appendChild(off_table);
+
+  grid_div.appendChild(readings_table);
 
   document.getElementById('jmr06-calc').hidden = false;
   document.getElementById('jmr06-decompose').hidden = true;
@@ -260,8 +260,8 @@ function jmr06_calc(_) {
   let Pc = math.multiply(B, coeffs);
 
   // Something fucked going on here
-  //let diff = math.subtract(piAM, Pc);
-  let diff = math.subtract(Pc, piAM);
+  let diff = math.subtract(piAM, Pc);
+  //let diff = math.subtract(Pc, piAM);
   let minimum = math.min(diff);
   let average = math.mean(diff);
 
@@ -273,7 +273,7 @@ function jmr06_calc(_) {
 
   // Calculate RMS error
   let rms = Math.sqrt(math.sum(math.map(math.subtract(M, Mc), (x) => x * x)) / M.size());
-  document.getElementById('jmr06-rms').value = rms;
+  document.getElementById('jmr06-rms').innerHTML = rms.toFixed(1);
 
   // Output the raw measurements
   for (const row of iota(h_rows)) {

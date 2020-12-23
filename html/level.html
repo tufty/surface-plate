@@ -46,6 +46,7 @@
              <h2>Grid Decomposition</h2>
            <div id="jmr06-grid">
            </div>
+           <p>RMS error (µ) : <span name="jmr06-rms" id="jmr06-rms"></span></p>
            <div class="controls" id="jmr06-controls">
              <input type="button" name="jmr06-decompose" id="jmr06-decompose" value="Create Grid" onclick="jmr06_decompose();">
              <input type="button" name="jmr06-calc" id="jmr06-calc" value="Calculate" onclick="jmr06_calc();">
@@ -83,11 +84,6 @@
              aria-hidden="false">
              <h2>Results</h2>
              <div id="jmr06-results">
-               <p>
-                 <label for="jmr06-rms">RMS Error</label>
-                 <input type="number" name="jmr06-rms" id="jmr06-rms" value="" disabled="true">
-               </p>
-
                <h3>Raw results (µm)</h3>
                <p id="jmr06-raw"></p>
                <h3>Corrected results (µm from best plane)</h3>
