@@ -297,7 +297,7 @@ function jmr06_calc(_) {
   // Build up some 3d.
   let points_3d = Array.from(iota(h_rows), function (row) {
     return Array.from(iota(v_cols), function (col) {
-      return [col * length, results[(row * v_cols) + col][2] / 10, row * length];
+      return [col * length, results[(row * v_cols) + col][2] * 10, row * length];
     });
   });
 
